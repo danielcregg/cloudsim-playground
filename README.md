@@ -6,15 +6,34 @@
 
 > **Note:** This repository is a fork of [crunchycookie/cloudsim-playground](https://github.com/crunchycookie/cloudsim-playground).
 
-A Maven-based playground for the [CloudSim](https://github.com/Cloudslab/cloudsim) framework that simplifies the process of writing and running custom cloud simulation scenarios. This project eliminates the need for IDE-specific configurations by providing a clean, command-line-driven build and execution environment.
+A Maven-based playground for the [CloudSim](https://github.com/Cloudslab/cloudsim) framework (v3.0.3) that simplifies the process of writing and running custom cloud simulation scenarios. This project includes builder-pattern classes for constructing CloudSim entities and multiple ready-to-run simulation scenarios.
 
-The project includes builder-pattern classes for constructing CloudSim entities (datacenters, hosts, characteristics) and a sample scenario that simulates a datacenter with 500 hosts.
+## Scenarios
+
+### 1. CreateDatacenter (Original)
+Creates a datacenter with 500 hosts but does not run a simulation. Useful for verifying infrastructure setup.
+
+### 2. BasicSimulation (NEW)
+A **complete end-to-end simulation** that fills the gap of having no runnable simulation in the original project:
+- Creates a datacenter with 4 hosts (4 cores each, 1000 MIPS/core, 8 GB RAM)
+- Creates 4 VMs (2 cores each) and 8 cloudlets with varying computational lengths
+- Runs the full simulation lifecycle
+- Prints cloudlet execution results (CPU time, start/finish times)
+- Prints host utilization statistics
+
+### 3. EnergyAwareSimulation (NEW)
+An **energy-aware simulation** using CloudSim's power package:
+- Uses `PowerHost`, `PowerVm`, and `PowerDatacenter` for energy modeling
+- Applies a linear power model (35W idle, 50W full load) to each host
+- Creates 4 power-aware VMs and 8 cloudlets
+- Reports per-host power consumption (Watts) and estimated energy (Wh)
+- Demonstrates how to measure energy efficiency in CloudSim 3.0.3
 
 ## Prerequisites
 
 - **Java** JDK 16 or higher
 - **Apache Maven** 3.8.1 or higher
-- **CloudSim JAR** -- `cloudsim-<version>.jar` from the [CloudSim releases](https://github.com/Cloudslab/cloudsim)
+- **CloudSim JAR** -- `cloudsim-3.0.3.jar` from the [CloudSim releases](https://github.com/Cloudslab/cloudsim)
 
 ## Getting Started
 
@@ -24,81 +43,96 @@ The project includes builder-pattern classes for constructing CloudSim entities 
    cd cloudsim-playground
    ```
 
-2. **Configure the CloudSim JAR path:**
+2. **Set up the CloudSim JAR** (choose one method):
 
-   Download the latest CloudSim release, extract the archive, and locate the `cloudsim-<version>.jar` file in the `jars/` directory. Then open `pom.xml` and update the `cloudsim-framework-jar-location` property with the absolute path to the JAR file:
-   ```xml
-   <cloudsim-framework-jar-location>/path/to/cloudsim-3.0.3.jar</cloudsim-framework-jar-location>
+   **Option A: Place in `lib/` directory (recommended)**
+   ```bash
+   mkdir -p lib
+   cp /path/to/cloudsim-3.0.3.jar lib/
+   ```
+   The `pom.xml` default looks for `lib/cloudsim-3.0.3.jar` relative to the project root.
+
+   **Option B: Specify a custom path**
+   ```bash
+   mvn initialize -Dcloudsim-framework-jar-location=/absolute/path/to/cloudsim-3.0.3.jar
    ```
 
-3. **Initialize the project:**
+3. **Initialize the project** (installs the CloudSim JAR to your local Maven repository):
    ```bash
    mvn initialize
    ```
-   This installs the CloudSim JAR into your local Maven repository.
 
-## Usage
-
-### Running the Built-in Scenario
-
-Run the included `CreateDatacenter` scenario, which simulates a datacenter with 500 hosts (8 cores, 64 GB RAM, 10 TB storage each):
-
-```bash
-mvn exec:java@CreateDatacenterScenario
-```
-
-Or using the full class path:
-
-```bash
-mvn exec:java -Dexec.mainClass="org.crunchycookie.playground.cloudsim.examples.CreateDatacenter"
-```
-
-Expected output:
-```
-Initialising...
-Successfully created the datacenter. Here are some stats.
-Number of Hosts: 500. Let's check stats of a host.
-Number of cores: 8
-Amount of Ram(GB): 64
-Amount of Storage(TB): 10
-```
-
-### Writing Custom Scenarios
-
-1. Create a new Java class with a `main` method in:
-   ```
-   src/main/java/org/crunchycookie/playground/cloudsim/scenarios/
-   ```
-
-2. Optionally register it in `pom.xml` under the `exec-maven-plugin` configuration for a convenient alias:
-   ```xml
-   <execution>
-       <id>MyCustomScenario</id>
-       <configuration>
-           <mainClass>org.crunchycookie.playground.cloudsim.scenarios.MyCustomScenario</mainClass>
-       </configuration>
-   </execution>
-   ```
-
-3. Run it:
+4. **Build:**
    ```bash
-   mvn exec:java@MyCustomScenario
+   mvn compile
    ```
+
+## Running the Scenarios
+
+```bash
+# Run the basic simulation (full lifecycle)
+mvn exec:java@BasicSimulation
+
+# Run the energy-aware simulation
+mvn exec:java@EnergyAwareSimulation
+
+# Run the original datacenter creation scenario
+mvn exec:java@CreateDatacenterScenario
+
+# Or run any scenario directly:
+mvn exec:java -Dexec.mainClass="org.crunchycookie.playground.cloudsim.scenarios.BasicSimulation"
+```
+
+### Expected Output (BasicSimulation)
+```
+==========================================================
+  BasicSimulation - CloudSim Playground
+==========================================================
+
+CloudSim initialized.
+Datacenter created with 4 hosts.
+Submitted 4 VMs.
+Submitted 8 cloudlets.
+
+Starting simulation...
+Simulation finished.
+
+==========================================================
+  CLOUDLET EXECUTION RESULTS
+==========================================================
+Cloudlet ID  Status     Datacenter ID   VM ID    CPU Time     Start Time   Finish Time
+----------------------------------------------------------
+0            SUCCESS    2               0        10.0         0.1          10.1
+...
+```
 
 ## Project Structure
 
 ```
 cloudsim-playground/
+├── lib/                          # Place cloudsim-3.0.3.jar here
 ├── src/main/java/org/crunchycookie/playground/cloudsim/
 │   ├── builders/
-│   │   ├── DatacenterBuilder.java                  # Builder for Datacenter objects
-│   │   ├── DatacenterCharacteristicsBuilder.java   # Builder for DatacenterCharacteristics
-│   │   └── HostBuilder.java                        # Builder for Host objects
+│   │   ├── DatacenterBuilder.java
+│   │   ├── DatacenterCharacteristicsBuilder.java
+│   │   └── HostBuilder.java
 │   └── scenarios/
-│       └── CreateDatacenter.java                   # Sample datacenter simulation
+│       ├── CreateDatacenter.java          # Original: creates datacenter only
+│       ├── BasicSimulation.java           # NEW: complete simulation lifecycle
+│       └── EnergyAwareSimulation.java     # NEW: energy-aware with PowerHost
 ├── pom.xml
-└── LICENSE
+├── LICENSE
+└── README.md
 ```
+
+## Migrating to CloudSim Plus
+
+For modern cloud simulation research, consider using [CloudSim Plus](https://github.com/danielcregg/cloudsimplus-daniel), which provides:
+- Java 17+ support with modern API design
+- Built-in power models and energy monitoring
+- VM migration policies with utilization thresholds
+- Extensive documentation and 90+ examples
+- Active maintenance and community support
 
 ## License
 

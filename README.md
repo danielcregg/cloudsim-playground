@@ -1,128 +1,107 @@
-<h1 align="center">Welcome to the CloudSim Playground 👋</h1>
-<p align="center">
-  <a href="https://github.com/crunchycookie/cloudsim-playground/blob/master/LICENSE">
-    <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-yellow.svg" target="_blank" />
-  </a>
-</p>
+# CloudSim Playground
 
-## ✨ What is CloudSim?
+![Java](https://img.shields.io/badge/Java-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)
+![Last Commit](https://img.shields.io/github/last-commit/danielcregg/cloudsim-playground?style=flat-square)
 
-CloudSim is an extensible framework for modelling, and simulating cloud computing infrastructures. It allows researchers/developers to focus on specific system design issues, without worrying 
-about configuring and simulation of a cloud computing infrastructure. More information can be found from it's opensource project(https://github.com/Cloudslab/cloudsim).
+> **Note:** This repository is a fork of [crunchycookie/cloudsim-playground](https://github.com/crunchycookie/cloudsim-playground).
 
-## ✨ What is the intention of this project?
+A Maven-based playground for the [CloudSim](https://github.com/Cloudslab/cloudsim) framework that simplifies the process of writing and running custom cloud simulation scenarios. This project eliminates the need for IDE-specific configurations by providing a clean, command-line-driven build and execution environment.
 
-Writing custom scenarios on top of the CloudSim framework can be a bit difficult, especially for configuring and running. There are some great blog posts about
-configuring the CloudSim framework and running the examples, but they do depend on an IDE like eclipse. 
+The project includes builder-pattern classes for constructing CloudSim entities (datacenters, hosts, characteristics) and a sample scenario that simulates a datacenter with 500 hosts.
 
-However, depending on an IDE would not be an ideal choice in the long run for reasons like compatibility issues, dependency management, etc.
+## Prerequisites
 
-This project provides a comprehensive build and execution environment for the CloudSim framework by creating a 
-Maven based playground for CloudSim. In this way, the IDE dependency is completely eliminated.
+- **Java** JDK 16 or higher
+- **Apache Maven** 3.8.1 or higher
+- **CloudSim JAR** -- `cloudsim-<version>.jar` from the [CloudSim releases](https://github.com/Cloudslab/cloudsim)
 
-## 🚀 Usage
+## Getting Started
 
-First, there are some pre-requisites required to build the project.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/danielcregg/cloudsim-playground.git
+   cd cloudsim-playground
+   ```
 
-1. JDK 16 or higher.
-2. Apache Maven 3.8.1 or higher(may work with lower versions)
-3. cloudsim-<version>.jar file obtained from https://github.com/Cloudslab/cloudsim. For this, download the latest release
-of CloudSim from the project and extract the downloaded artifact which is an archive file. Required jar file is in the
-   `<extracted-artifact>/jars` location.
-   
-As mentioned, this project is a pure Maven project. However, the CloudSim framework dependency is not available in 
-any of the maven artifact repositories. Therefore, this project requires the path of the downloaded CloudSim framework
-JAR file, and then the project will install the JAR file in the local Maven repository during the initializing phase.
+2. **Configure the CloudSim JAR path:**
 
-To provide the JAR file path to the project, obtain the absolute path of the cloudsim-<version>.jar file, and open 
-the pom.xml file in this project root. Under the `<properties>` tag, there is a property called `cloudsim-framework-jar-location`.
-Replace it's value with the copied value.
+   Download the latest CloudSim release, extract the archive, and locate the `cloudsim-<version>.jar` file in the `jars/` directory. Then open `pom.xml` and update the `cloudsim-framework-jar-location` property with the absolute path to the JAR file:
+   ```xml
+   <cloudsim-framework-jar-location>/path/to/cloudsim-3.0.3.jar</cloudsim-framework-jar-location>
+   ```
 
-Now the project is ready to be initialized. Execute the following command.
+3. **Initialize the project:**
+   ```bash
+   mvn initialize
+   ```
+   This installs the CloudSim JAR into your local Maven repository.
 
-`mvn initialize`
+## Usage
 
-This will install the CloudSim JAR file in the local maven repository similar to a standard Maven dependency.
+### Running the Built-in Scenario
 
-That concludes the project configurations. Users can implement their custom scenarios in the 
-`<project-home>/src/main/java/org/crunchycookie/playground/cloudsim/scenarios` location and execute it with the maven
-execution plugin. Let's try to do this with the OOTB provided CloudSim scenario called `CreateDatacenter`.
+Run the included `CreateDatacenter` scenario, which simulates a datacenter with 500 hosts (8 cores, 64 GB RAM, 10 TB storage each):
 
-In the above-mentioned location where scenarios reside, there is a java class file called `CreateDatacenter.java`. 
-This simulates a datacenter using the CloudSim framework. Also, note that this class has a static void main method which 
-executes the simulation. Therefore, the Maven execution plugin can be used to execute it via the following CLI command. 
+```bash
+mvn exec:java@CreateDatacenterScenario
+```
 
-`mvn exec:java -Dexec.mainClass="org.crunchycookie.playground.cloudsim.examples.CreateDatacenter"`
+Or using the full class path:
 
-A log trace similar to the following should be printed to the standard output, which is the current terminal.
+```bash
+mvn exec:java -Dexec.mainClass="org.crunchycookie.playground.cloudsim.examples.CreateDatacenter"
+```
 
-```java
-<user> cloudsim-playground % mvn exec:java -Dexec.mainClass="org.crunchycookie.playground.cloudsim.examples.CreateDatacenter"
-[INFO] Scanning for projects...
-[INFO] 
-[INFO] ------< org.crunchycookie.playground.cloudsim:cloudsim-examples >-------
-[INFO] Building cloudsim-examples 0.1-SNAPSHOT
-[INFO] --------------------------------[ jar ]---------------------------------
-[INFO] 
-[INFO] --- exec-maven-plugin:3.0.0:java (default-cli) @ cloudsim-examples ---
+Expected output:
+```
 Initialising...
 Successfully created the datacenter. Here are some stats.
 Number of Hosts: 500. Let's check stats of a host.
 Number of cores: 8
 Amount of Ram(GB): 64
 Amount of Storage(TB): 10
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  0.284 s
-[INFO] Finished at: 2021-05-15T01:52:56+05:30
-[INFO] ------------------------------------------------------------------------
 ```
-Please note that the `-Dexec.mainClass=` parameter is equal to the `CreateDatacenter` scenario class. Therefore, any 
-custom scenario can be executed in this manner by changing `-Dexec.mainClass=` parameter value to the corresponding class.
 
-Using the full class path everytime isn't much convenient. Therefore, a custom scenario class path
-can be configured in the maven exec plugin and an alias can be used instead of the full class path. 
-This is already done for the CreateDatacenter scenario. Go to the parent pom file and observe the 
-`exec-maven-plugin` configuration. The following code block can be observed.
-```xml
-...
-<execution>
-   <id>CreateDatacenterScenario</id>
-   <configuration>
-       <mainClass>org.crunchycookie.playground.cloudsim.examples.CreateDatacenter</mainClass>
-   </configuration>
-</execution>
-...
+### Writing Custom Scenarios
+
+1. Create a new Java class with a `main` method in:
+   ```
+   src/main/java/org/crunchycookie/playground/cloudsim/scenarios/
+   ```
+
+2. Optionally register it in `pom.xml` under the `exec-maven-plugin` configuration for a convenient alias:
+   ```xml
+   <execution>
+       <id>MyCustomScenario</id>
+       <configuration>
+           <mainClass>org.crunchycookie.playground.cloudsim.scenarios.MyCustomScenario</mainClass>
+       </configuration>
+   </execution>
+   ```
+
+3. Run it:
+   ```bash
+   mvn exec:java@MyCustomScenario
+   ```
+
+## Project Structure
+
 ```
-This configuration tells Maven exec plugin that the provided id value `CreateDatacenterScenario` 
-refers to the provided main class. Any custom scenario can be configured in this manner. Now, to 
-execute the main class all it requires is to execute the following CLI command.
+cloudsim-playground/
+├── src/main/java/org/crunchycookie/playground/cloudsim/
+│   ├── builders/
+│   │   ├── DatacenterBuilder.java                  # Builder for Datacenter objects
+│   │   ├── DatacenterCharacteristicsBuilder.java   # Builder for DatacenterCharacteristics
+│   │   └── HostBuilder.java                        # Builder for Host objects
+│   └── scenarios/
+│       └── CreateDatacenter.java                   # Sample datacenter simulation
+├── pom.xml
+└── LICENSE
+```
 
-`mvn exec:java@CreateDatacenterScenario`
+## License
 
-The same status log can be observed.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-
-## 🤝 Contributing
-
-Contributions, issues and feature requests are welcome.
-
-## Code style
-
-JAVA code style by google is followed.
-
-## Author
-
-👤 **Tharindu Bandara**
-
-- Github: [@tharindu-bandara](https://github.com/tharindu-bandara)
-
-## Show your support
-
-Please ⭐️ this repository if this project helped you!
-
-## 📝 License
-
-Copyright © 2021 [crunchycookie](https://github.com/crunchycookie).
-This project is [MIT](https://github.com/crunchycookie/cloudsim-playground/blob/master/LICENSE) licensed.
+Original project by [crunchycookie](https://github.com/crunchycookie).
